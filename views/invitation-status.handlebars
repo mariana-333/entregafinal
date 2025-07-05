@@ -1,0 +1,205 @@
+<main>
+      <section class="invitation-status">
+        <div class="status-container">
+          {{#if success}}
+          <div class="success-card">
+            <div class="icon-success">✅</div>
+            <h1>¡Te has unido exitosamente!</h1>
+            <div class="game-details">
+              <h3>Detalles de la partida</h3>
+              <div class="detail-item">
+                <span class="label">Oponente:</span>
+                <span class="value">{{opponentName}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Tu color:</span>
+                <span class="value">{{#if (eq playerColor 'blanca')}}♔ Blancas{{else}}♚ Negras{{/if}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">ID de Partida:</span>
+                <span class="value">{{gameId}}</span>
+              </div>
+            </div>
+            <div class="action-buttons">
+              <a href="/chessboard?game={{gameId}}" class="button primary-button">🎮 ¡Comenzar a jugar!</a>
+              <a href="/privategame" class="button">📋 Ver mis partidas</a>
+            </div>
+          </div>
+          {{/if}}
+
+          {{#if error}}
+          <div class="error-card">
+            <div class="icon-error">❌</div>
+            <h1>No se pudo unir a la partida</h1>
+            <p class="error-message">{{error}}</p>
+            <div class="help-info">
+              <h4>Posibles razones:</h4>
+              <ul>
+                <li>El enlace ha expirado (las invitaciones duran 24 horas)</li>
+                <li>Otro jugador ya se unió a esta partida</li>
+                <li>Estás intentando unirte a tu propia partida</li>
+                <li>La invitación no existe o es inválida</li>
+              </ul>
+            </div>
+            <div class="action-buttons">
+              <a href="/creategame" class="button">➕ Crear nueva partida</a>
+              <a href="/privategame" class="button">📋 Ver invitaciones pendientes</a>
+              <a href="/play" class="button">🎮 Explorar modos de juego</a>
+            </div>
+          </div>
+          {{/if}}
+
+          {{#if waiting}}
+          <div class="waiting-card">
+            <div class="icon-waiting">⏳</div>
+            <h1>Partida creada</h1>
+            <p>Esperando que alguien se una usando tu enlace de invitación.</p>
+            <div class="invitation-info">
+              <div class="detail-item">
+                <span class="label">ID de Partida:</span>
+                <span class="value">{{gameId}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Tu color:</span>
+                <span class="value">{{#if (eq ownerColor 'blanca')}}♔ Blancas{{else}}♚ Negras{{/if}}</span>
+              </div>
+            </div>
+            <div class="action-buttons">
+              <a href="/privategame" class="button">📋 Ver estado de invitaciones</a>
+              <a href="/creategame" class="button">➕ Crear otra partida</a>
+            </div>
+          </div>
+          {{/if}}
+        </div>
+      </section>
+    </main>
+
+    <style>
+    .invitation-status {
+      min-height: 70vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .status-container {
+      max-width: 60rem;
+      width: 100%;
+    }
+
+    .success-card, .error-card, .waiting-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1.5rem;
+      padding: 3rem;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .success-card {
+      border-top: 5px solid #4CAF50;
+    }
+
+    .error-card {
+      border-top: 5px solid #f44336;
+    }
+
+    .waiting-card {
+      border-top: 5px solid #ff9800;
+    }
+
+    .icon-success, .icon-error, .icon-waiting {
+      font-size: 6rem;
+      margin-bottom: 1rem;
+    }
+
+    .status-container h1 {
+      font-size: 2.8rem;
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+    }
+
+    .game-details, .invitation-info {
+      background: rgba(0, 153, 136, 0.1);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin: 2rem 0;
+    }
+
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1rem 0;
+      font-size: 1.6rem;
+    }
+
+    .label {
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .value {
+      font-weight: 500;
+      color: var(--aqua);
+    }
+
+    .error-message {
+      font-size: 1.8rem;
+      color: #d32f2f;
+      margin: 1.5rem 0;
+    }
+
+    .help-info {
+      background: rgba(244, 67, 54, 0.1);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      text-align: left;
+    }
+
+    .help-info h4 {
+      color: var(--dark);
+      margin-bottom: 1rem;
+    }
+
+    .help-info ul {
+      margin: 0;
+      padding-left: 2rem;
+    }
+
+    .help-info li {
+      margin: 0.5rem 0;
+      color: #666;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2.5rem;
+    }
+
+    .primary-button {
+      background: linear-gradient(135deg, var(--aqua), var(--purple));
+      color: white;
+      font-weight: 600;
+      font-size: 1.8rem;
+      padding: 1.2rem 2.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .action-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .detail-item {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+      }
+    }
+    </style>

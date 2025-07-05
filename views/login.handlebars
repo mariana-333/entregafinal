@@ -1,0 +1,45 @@
+<main>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <i class="fas fa-chess-knight"></i>
+        <h1>Iniciar sesión</h1>
+        <p>Accede a tu cuenta para disfrutar de la experiencia completa</p>
+      </div>
+      
+      {{#if error}}
+      <div class="auth-error">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>{{error}}</p>
+      </div>
+      {{/if}}
+      
+      <form class="auth-form" action="/login" method="post">
+        <div class="form-group">
+          <label for="username">
+            <i class="fas fa-user"></i>
+            <span>Nombre de usuario</span>
+          </label>
+          <input name="username" type="text" id="username" placeholder="Tu nombre de usuario" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">
+            <i class="fas fa-lock"></i>
+            <span>Contraseña</span>
+          </label>
+          <input name="password" type="password" id="password" placeholder="Tu contraseña" required>
+        </div>
+        
+        <button type="submit" class="auth-button">
+          <span>Iniciar sesión</span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </form>
+      
+      <div class="auth-footer">
+        <p>¿No tienes una cuenta? <a href="/register">Regístrate aquí</a></p>
+      </div>
+    </div>
+  </div>
+</main>

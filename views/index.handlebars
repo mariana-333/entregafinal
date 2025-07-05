@@ -1,0 +1,25 @@
+<main>
+    <div class="hero-content">
+        <h1 class="main-title">Domina el Arte del Ajedrez</h1>
+        <div class="hero-text">
+            <p>Una experiencia única de ajedrez en línea, diseñada para jugadores de todos los niveles</p>
+            {{#if isLoggedIn}}
+                <div class="welcome-message">
+                    <p>¡Bienvenido de vuelta, <strong>{{currentUser.username}}</strong>!</p>
+                    <div class="action-buttons">
+                        <a href="/chessboard" class="btn btn-primary">🎮 Jugar Ahora</a>
+                        <a href="/privategame" class="btn btn-secondary">📋 Mis Juegos</a>
+                    </div>
+                </div>
+            {{else}}
+                <div class="login-prompt">
+                    <p>Inicia sesión para comenzar a jugar</p>
+                    <div class="action-buttons">
+                        <a href="/login" class="btn btn-primary">🔑 Iniciar Sesión</a>
+                        <a href="/register" class="btn btn-secondary">📝 Registrarse</a>
+                    </div>
+                </div>
+            {{/if}}
+        </div>
+    </div>
+</main>

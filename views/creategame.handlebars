@@ -1,0 +1,88 @@
+<main>
+      <section class="private-game">
+        <h1>Crear Nueva Partida</h1>
+        <div class="games-grid">
+          <div class="game-info">
+            {{#if success}}
+            <div class="success-message">
+              <h3>🎉 ¡Partida creada exitosamente!</h3>
+              {{#if message}}
+              <p>{{message}}</p>
+              {{/if}}
+              
+              <div class="invitation-details">
+                <h4>Enlace de invitación:</h4>
+                <div class="invitation-link-container">
+                  <input type="text" value="{{invitationLink}}" id="invitationLink" readonly class="input-text">
+                  <button onclick="copyInvitationLink()" class="button" style="margin-left: 10px;">📋 Copiar</button>
+                </div>
+                <p><small>Comparte este enlace con el jugador que quieres invitar. El primer jugador que haga clic se unirá a tu partida.</small></p>
+                
+                <div class="game-details">
+                  <p><strong>ID de Partida:</strong> {{gameId}}</p>
+                  <p><strong>Tu color:</strong> {{#if (eq ownerColor 'blanca')}}♔ Blancas{{else}}♚ Negras{{/if}}</p>
+                </div>
+                
+                <div class="action-buttons">
+                  <a href="/chessboard" class="button">🎮 Ir al tablero</a>
+                  <a href="/my-games" class="button">📋 Ver mis partidas</a>
+                  <a href="/creategame" class="button">➕ Crear otra partida</a>
+                </div>
+              </div>
+            </div>
+            {{else}}
+            <form action="/creategame" method="post" class="formulary">
+              {{#if error}}
+              <div class="error">{{error}}</div>
+              {{/if}}
+              
+              <div class="fieldset">
+                <label for="color">Elige tu color:</label>
+                <select name="color" id="color" required class="input-text">
+                  <option value="blanca">♔ Blancas</option>
+                  <option value="negra">♚ Negras</option>
+                </select>
+              </div>
+
+              <div class="fieldset">
+                <label for="email">Invitar jugador (opcional):</label>
+                <input name="email" class="input-text" type="email" id="email" 
+                        placeholder="correo@ejemplo.com">
+                <small>Si dejas este campo vacío, podrás compartir el enlace con cualquier jugador</small>
+              </div>
+
+              <div class="submit">
+                <button type="submit" class="button">🎯 Crear partida</button>
+              </div>
+            </form>
+            {{/if}}
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+    function copyInvitationLink() {
+        const linkInput = document.getElementById('invitationLink');
+        linkInput.select();
+        linkInput.setSelectionRange(0, 99999); // Para móviles
+        
+        try {
+            document.execCommand('copy');
+            
+            // Cambiar el texto del botón temporalmente
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✅ ¡Copiado!';
+            button.style.backgroundColor = '#4CAF50';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.backgroundColor = '';
+            }, 2000);
+        } catch (err) {
+            alert('No se pudo copiar automáticamente. Selecciona y copia el enlace manualmente.');
+        }
+    }
+    </script>
+ 

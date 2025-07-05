@@ -1,0 +1,105 @@
+<main>
+  <div class="auth-container">
+    <div class="auth-card register-card">
+      <div class="auth-header">
+        <i class="fas fa-user-plus"></i>
+        <h1>Crear cuenta</h1>
+        <p>Regístrate para unirte a la comunidad de ajedrecistas</p>
+      </div>
+      
+      {{#if error}}
+      <div class="auth-error">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>{{error}}</p>
+      </div>
+      {{/if}}
+      
+      <form class="auth-form" action="/register" method="post" enctype="multipart/form-data">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nombres">
+              <i class="fas fa-user"></i>
+              <span>Nombres</span>
+            </label>
+            <input name="nombres" type="text" id="nombres" placeholder="Tus nombres" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="apellidos">
+              <i class="fas fa-user"></i>
+              <span>Apellidos</span>
+            </label>
+            <input name="apellidos" type="text" id="apellidos" placeholder="Tus apellidos" required>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fecha">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Fecha de nacimiento</span>
+            </label>
+            <input name="fecha" type="date" id="fecha" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="username">
+              <i class="fas fa-chess-pawn"></i>
+              <span>Nombre de usuario</span>
+            </label>
+            <input name="username" type="text" id="username" placeholder="Tu nombre de usuario" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">
+            <i class="fas fa-envelope"></i>
+            <span>Correo electrónico</span>
+          </label>
+          <input name="email" type="email" id="email" placeholder="correo@ejemplo.com" required>
+        </div>
+        
+        <div class="form-group file-upload">
+          <label for="profilepicture">
+            <i class="fas fa-camera"></i>
+            <span>Foto de perfil</span>
+          </label>
+          <div class="file-input-container">
+            <input name="profilepicture" type="file" id="profilepicture" accept="image/*">
+            <div class="file-overlay">
+              <i class="fas fa-upload"></i>
+              <span>Seleccionar imagen</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="password">
+              <i class="fas fa-lock"></i>
+              <span>Contraseña</span>
+            </label>
+            <input name="password" type="password" id="password" placeholder="Tu contraseña" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="confirm-password">
+              <i class="fas fa-lock"></i>
+              <span>Confirmar contraseña</span>
+            </label>
+            <input name="confirm-password" type="password" id="confirm-password" placeholder="Repite tu contraseña" required>
+          </div>
+        </div>
+        
+        <button type="submit" class="auth-button">
+          <span>Crear cuenta</span>
+          <i class="fas fa-chess-knight"></i>
+        </button>
+      </form>
+      
+      <div class="auth-footer">
+        <p>¿Ya tienes una cuenta? <a href="/login">Inicia sesión aquí</a></p>
+      </div>
+    </div>
+  </div>
+</main>

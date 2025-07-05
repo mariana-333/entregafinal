@@ -1,0 +1,475 @@
+<main>
+<section class="private-game">
+    <h1>Partidas Privadas</h1>
+    
+    {{#if pendingInvitations}}
+    <div class="games-grid">
+        <h2>📨 Invitaciones Recibidas</h2>
+        {{#each pendingInvitations}}
+        <div class="game-info invitation-pending">
+            <h3>Invitación de: {{ownerName}}</h3>
+            <div class="game-details">
+                <p><strong>Color del oponente:</strong> {{#if (eq ownerColor 'blanca')}}♔ Blancas{{else}}♚ Negras{{/if}}</p>
+                <p><strong>Tu color:</strong> {{#if (eq ownerColor 'blanca')}}♚ Negras{{else}}♔ Blancas{{/if}}</p>
+                <p><strong>Creada:</strong> {{createdDate}}</p>
+            </div>
+            <div class="button-group">
+                <a href="/join-game/{{invitationId}}" class="button success-button">✅ Aceptar</a>
+                <button onclick="declineInvitation('{{invitationId}}')" class="button danger-button">❌ Rechazar</button>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    {{#if sentInvitations}}
+    <div class="games-grid">
+        <h2>📤 Mis Invitaciones Enviadas</h2>
+        {{#each sentInvitations}}
+        <div class="game-info invitation-sent {{#if isExpired}}expired{{/if}}">
+            <h3>Partida {{gameId}}</h3>
+            <div class="game-details">
+                <p><strong>Estado:</strong> 
+                    {{#if (eq status 'pending')}}⏳ Pendiente{{/if}}
+                    {{#if (eq status 'accepted')}}✅ Aceptada{{/if}}
+                    {{#if (eq status 'expired')}}❌ Expirada{{/if}}
+                </p>
+                <p><strong>Tu color:</strong> {{#if (eq ownerColor 'blanca')}}♔ Blancas{{else}}♚ Negras{{/if}}</p>
+                {{#if invitedEmail}}
+                <p><strong>Invitado:</strong> {{invitedEmail}}</p>
+                {{/if}}
+                {{#if acceptedByName}}
+                <p><strong>Aceptada por:</strong> {{acceptedByName}}</p>
+                {{/if}}
+                <p><strong>Creada:</strong> {{createdDate}}</p>
+            </div>
+            <div class="button-group">
+                {{#if (eq status 'pending')}}
+                {{#unless isExpired}}
+                <div class="invitation-link-section">
+                    <input type="text" value="{{invitationLink}}" class="link-input" readonly>
+                    <button onclick="copyInvitationLink(this)" class="button copy-btn">📋</button>
+                </div>
+                {{/unless}}
+                {{/if}}
+                {{#if (eq status 'accepted')}}
+                <a href="/chessboard?game={{gameId}}" class="button success-button">🎮 Jugar</a>
+                {{/if}}
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+    
+    {{#if activeGames}}
+    <div class="games-grid">
+        <h2>🎮 Partidas Activas</h2>
+        {{#each activeGames}}
+        <div class="game-info">
+            <h3>Partida contra: {{opponentName}}</h3>
+            <div class="game-details">
+                <p><strong>Estado:</strong> {{status}}</p>
+                <p><strong>Tu color:</strong> {{userColor}}</p>
+                <p><strong>Iniciada:</strong> {{startDate}}</p>
+            </div>
+            <div class="button-group">
+                <a href="/chessboard?game={{gameId}}" class="button">🎯 Continuar</a>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+    
+    {{#if error}}
+    <div class="error">{{error}}</div>
+    {{/if}}
+    
+    {{#if message}}
+    <div class="success">{{message}}</div>
+    {{/if}}
+    
+    {{#unless pendingInvitations}}
+    {{#unless sentInvitations}}
+    {{#unless activeGames}}
+    <div class="games-grid">
+        <div class="game-info">
+            <h3>🤝 No tienes partidas privadas</h3>
+            <p>Aquí aparecerán las invitaciones que recibas, las que envíes y las partidas privadas activas.</p>
+            <div class="button-group">
+                <a href="/creategame" class="button">➕ Crear nueva partida</a>
+                <a href="/play" class="button">🎮 Ver otros modos de juego</a>
+            </div>
+        </div>
+    </div>
+    {{/unless}}
+    {{/unless}}
+    {{/unless}}
+    
+</section>
+</main>
+
+<style>
+.private-game {
+    max-width: 120rem;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.private-game h1 {
+    text-align: center;
+    font-size: 3.2rem;
+    color: var(--dark);
+    margin-bottom: 3rem;
+    background: linear-gradient(135deg, var(--aqua), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.private-game h2 {
+    font-size: 2.4rem;
+    color: var(--dark);
+    margin-bottom: 2rem;
+    border-bottom: 3px solid var(--aqua);
+    padding-bottom: 1rem;
+}
+
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(35rem, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.game-info {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 1.2rem;
+    padding: 2rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-left: 4px solid var(--aqua);
+}
+
+.game-info:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.game-info.expired {
+    opacity: 0.7;
+    border-left-color: #ccc;
+}
+
+.invitation-pending {
+    border-left-color: #ff9800;
+}
+
+.invitation-sent {
+    border-left-color: #2196f3;
+}
+
+.game-info h3 {
+    font-size: 1.8rem;
+    color: var(--dark);
+    margin-bottom: 1.5rem;
+}
+
+.game-details {
+    margin-bottom: 2rem;
+}
+
+.game-details p {
+    margin: 0.8rem 0;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.invitation-link-section {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+    width: 100%;
+}
+
+.link-input {
+    flex: 1;
+    padding: 0.8rem;
+    border: 2px solid #ddd;
+    border-radius: 0.5rem;
+    font-size: 1.2rem;
+    background: #f9f9f9;
+}
+
+.copy-btn {
+    min-width: 4rem;
+    padding: 0.8rem;
+}
+
+.button {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 0.8rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    background: linear-gradient(135deg, var(--aqua), var(--purple));
+    color: white;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.success-button {
+    background: linear-gradient(135deg, #4caf50, #45a049) !important;
+}
+
+.danger-button {
+    background: linear-gradient(135deg, #f44336, #d32f2f) !important;
+}
+
+.error, .success {
+    padding: 1.5rem;
+    border-radius: 0.8rem;
+    margin: 2rem 0;
+    text-align: center;
+    font-weight: 600;
+}
+
+.error {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    color: white;
+}
+
+.success {
+    background: linear-gradient(135deg, #4caf50, #45a049);
+    color: white;
+}
+
+#update-indicator {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+@media (max-width: 768px) {
+    .games-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .invitation-link-section {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+function declineInvitation(invitationId) {
+    if (confirm('¿Estás seguro de que quieres rechazar esta invitación?')) {
+        fetch(`/decline-invitation/${invitationId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error al rechazar la invitación');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al rechazar la invitación');
+        });
+    }
+}
+
+function copyInvitationLink(button) {
+    const input = button.previousElementSibling;
+    input.select();
+    input.setSelectionRange(0, 99999);
+    
+    try {
+        document.execCommand('copy');
+        const originalContent = button.textContent;
+        button.textContent = '✅';
+        button.style.backgroundColor = '#4CAF50';
+        
+        setTimeout(() => {
+            button.textContent = originalContent;
+            button.style.backgroundColor = '';
+        }, 2000);
+    } catch (err) {
+        alert('No se pudo copiar. Selecciona y copia manualmente.');
+    }
+}
+
+// Función para mostrar notificaciones
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 10px;
+        background: ${type === 'success' ? 'rgba(76, 175, 80, 0.95)' : 
+                     type === 'error' ? 'rgba(244, 67, 54, 0.95)' : 
+                     'rgba(33, 150, 243, 0.95)'};
+        color: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        z-index: 1001;
+        max-width: 300px;
+        word-wrap: break-word;
+        animation: slideIn 0.3s ease-out;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Crear animación CSS si no existe
+    if (!document.getElementById('notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Remover después de 4 segundos
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 4000);
+}
+
+// Auto-refresco inteligente cada 15 segundos para mostrar cambios de estado
+document.addEventListener('DOMContentLoaded', function() {
+    let lastUpdate = new Date();
+    let currentCounts = null;
+    
+    // Mostrar indicador de última actualización
+    const updateIndicator = document.createElement('div');
+    updateIndicator.id = 'update-indicator';
+    updateIndicator.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 5px;
+        font-size: 12px;
+        z-index: 1000;
+    `;
+    updateIndicator.textContent = '🟢 Conectado - ' + lastUpdate.toLocaleTimeString();
+    document.body.appendChild(updateIndicator);
+    
+    // Botón de actualización manual
+    const refreshButton = document.createElement('button');
+    refreshButton.textContent = '🔄 Actualizar';
+    refreshButton.style.cssText = `
+        position: fixed;
+        top: 50px;
+        right: 10px;
+        background: rgba(33, 150, 243, 0.9);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        font-size: 12px;
+        cursor: pointer;
+        z-index: 1000;
+    `;
+    refreshButton.onclick = () => {
+        console.log('🔄 Actualización manual solicitada');
+        location.reload();
+    };
+    document.body.appendChild(refreshButton);
+    
+    // Función para verificar cambios
+    async function checkForUpdates() {
+        try {
+            updateIndicator.textContent = '🔄 Verificando...';
+            updateIndicator.style.background = 'rgba(255, 193, 7, 0.9)';
+            
+            const response = await fetch('/api/private-games-status');
+            const data = await response.json();
+            
+            if (data.success) {
+                // Comparar si hay cambios
+                const newCounts = data.counts;
+                const hasChanges = !currentCounts || 
+                    JSON.stringify(currentCounts) !== JSON.stringify(newCounts);
+                
+                if (hasChanges) {
+                    console.log('🔄 Cambios detectados, recargando página...');
+                    showNotification('Se detectaron cambios. Actualizando...', 'info');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    lastUpdate = new Date();
+                    updateIndicator.textContent = '🟢 Actualizado - ' + lastUpdate.toLocaleTimeString();
+                    updateIndicator.style.background = 'rgba(76, 175, 80, 0.9)';
+                }
+                
+                currentCounts = newCounts;
+            } else {
+                updateIndicator.textContent = '� Error de conexión';
+                updateIndicator.style.background = 'rgba(244, 67, 54, 0.9)';
+            }
+        } catch (error) {
+            console.error('Error al verificar actualizaciones:', error);
+            updateIndicator.textContent = '🔴 Sin conexión';
+            updateIndicator.style.background = 'rgba(244, 67, 54, 0.9)';
+        }
+    }
+    
+    // Verificar cambios cada 15 segundos
+    setInterval(checkForUpdates, 15000);
+    
+    // Verificación inicial después de 2 segundos
+    setTimeout(checkForUpdates, 2000);
+    
+    // Actualizar indicador de tiempo cada 5 segundos
+    setInterval(() => {
+        if (updateIndicator.textContent.includes('🟢')) {
+            const elapsed = Math.floor((new Date() - lastUpdate) / 1000);
+            updateIndicator.textContent = `🟢 Hace ${elapsed}s - ${lastUpdate.toLocaleTimeString()}`;
+        }
+    }, 5000);
+});
+</script>

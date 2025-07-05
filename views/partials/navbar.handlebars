@@ -1,0 +1,16 @@
+<div class="nav-bg">
+      <nav class="principal-nav container">
+        <a href="/">Inicio</a>
+        <a href="/rules">Historia y Reglas</a>
+        {{#if isLoggedIn}}
+          <a href="/chessboard">Partida</a>
+          <a href="/privategame">Mis Juegos</a>
+          <a href="/profile">Perfil ({{currentUser.username}})</a>
+          <a href="/logout">Cerrar Sesión</a>
+        {{else}}
+          <a href="/play">Jugar</a>
+          <a href="/login">Iniciar Sesión</a>
+          <a href="/register">Registrarse</a>
+        {{/if}}
+      </nav>
+</div>

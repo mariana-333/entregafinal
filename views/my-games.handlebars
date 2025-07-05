@@ -1,0 +1,737 @@
+<main>
+    <section class="my-games">
+        <h1>🎮 Mis Partidas</h1>
+        
+        {{#if invitations}}
+        <div class="section-block">
+            <h2>📨 Mis Invitaciones</h2>
+            <div class="games-grid">
+                {{#each invitations}}
+                <div class="game-card invitation-card {{#if isExpired}}expired{{/if}}">
+                    <div class="card-header">
+                        <h3>Partida {{gameId}}</h3>
+                        <span class="status-badge status-{{status}}">
+                            {{#if (eq status 'pending')}}⏳ Pendiente{{/if}}
+                            {{#if (eq status 'accepted')}}✅ Aceptada{{/if}}
+                            {{#if (eq status 'expired')}}❌ Expirada{{/if}}
+                        </span>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="detail-row">
+                            <span class="label">Tu color:</span>
+                            <span class="value">{{#if (eq ownerColor 'blanca')}}♔ Blancas{{else}}♚ Negras{{/if}}</span>
+                        </div>
+                        
+                        {{#if invitedEmail}}
+                        <div class="detail-row">
+                            <span class="label">Invitado:</span>
+                            <span class="value">{{invitedEmail}}</span>
+                        </div>
+                        {{/if}}
+                        
+                        {{#if acceptedByName}}
+                        <div class="detail-row">
+                            <span class="label">Aceptada por:</span>
+                            <span class="value">{{acceptedByName}}</span>
+                        </div>
+                        {{/if}}
+                        
+                        <div class="detail-row">
+                            <span class="label">Creada:</span>
+                            <span class="value">{{createdDate}}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-actions">
+                        {{#if (eq status 'pending')}}
+                        {{#unless isExpired}}
+                        <div class="invitation-link-section">
+                            <input type="text" value="{{invitationLink}}" class="link-input" readonly>
+                            <button onclick="copyLink(this)" class="button copy-btn">📋</button>
+                        </div>
+                        <div class="action-buttons-row">
+                            <button onclick="deleteGame('{{gameId}}')" class="button danger-button">🗑️ Eliminar</button>
+                        </div>
+                        {{/unless}}
+                        {{/if}}
+                        
+                        {{#if (eq status 'accepted')}}
+                        <a href="/chessboard?game={{gameId}}" class="button primary-button">🎮 Jugar</a>
+                        {{/if}}
+                        
+                        {{#if (eq status 'expired')}}
+                        <div class="action-buttons-row">
+                            <button onclick="deleteGame('{{gameId}}')" class="button danger-button">🗑️ Eliminar</button>
+                        </div>
+                        {{/if}}
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        {{/if}}
+        
+        {{#if games}}
+        <div class="section-block">
+            <h2>🏆 Historial de Partidas</h2>
+            <div class="games-grid">
+                {{#each games}}
+                <div class="game-card history-card">
+                    <div class="card-header">
+                        <h3>Partida {{gameId}}</h3>
+                        <span class="status-badge status-{{status}}">
+                            {{#if (eq status 'playing')}}🔥 En curso{{/if}}
+                            {{#if (eq status 'finished')}}🏁 Finalizada{{/if}}
+                            {{#if (eq status 'waiting')}}⏳ Esperando{{/if}}
+                        </span>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="detail-row">
+                            <span class="label">Oponente:</span>
+                            <span class="value">{{opponentName}}</span>
+                        </div>
+                        
+                        {{#if (eq status 'finished')}}
+                        <div class="detail-row">
+                            <span class="label">Resultado:</span>
+                            <span class="value result-{{result}}">
+                                {{#if (eq result 'victory')}}🏆 Victoria{{/if}}
+                                {{#if (eq result 'defeat')}}😞 Derrota{{/if}}
+                                {{#if (eq result 'draw')}}🤝 Empate{{/if}}
+                            </span>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <span class="label">Finalizada:</span>
+                            <span class="value">{{finishedDate}}</span>
+                        </div>
+                        {{else}}
+                        <div class="detail-row">
+                            <span class="label">Iniciada:</span>
+                            <span class="value">{{createdDate}}</span>
+                        </div>
+                        {{/if}}
+                    </div>
+                    
+                    <div class="card-actions">
+                        {{#if (eq status 'playing')}}
+                        <a href="/chessboard?game={{gameId}}" class="button primary-button">🎮 Continuar</a>
+                        {{/if}}
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        {{/if}}
+        
+        {{#if error}}
+        <div class="error-message">{{error}}</div>
+        {{/if}}
+        
+        {{#unless invitations}}
+        {{#unless games}}
+        <div class="empty-state">
+            <div class="empty-icon">🎯</div>
+            <h2>No tienes partidas creadas</h2>
+            <p>¡Crea tu primera partida y comparte el enlace con tus amigos!</p>
+            <div class="action-buttons">
+                <a href="/creategame" class="button primary-button">➕ Crear partida</a>
+                <a href="/play" class="button">🎮 Explorar modos de juego</a>
+            </div>
+        </div>
+        {{/unless}}
+        {{/unless}}
+        
+        <div class="action-buttons">
+            <a href="/creategame" class="button">➕ Crear nueva partida</a>
+            <a href="/privategame" class="button">📨 Ver invitaciones recibidas</a>
+            <a href="/play" class="button">🎮 Modos de juego</a>
+        </div>
+    </section>
+</main>
+
+<!-- Modal de confirmación para eliminar partida -->
+<div id="delete-game-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>⚠️ Confirmar Eliminación de Partida</h3>
+        </div>
+        <div class="modal-body">
+            <p><strong>¿Estás seguro de que quieres eliminar esta partida?</strong></p>
+            <div class="warning-info">
+                <div class="warning-box">
+                    <p><strong>⚠️ Esta acción es permanente e irreversible.</strong></p>
+                    <p>Se eliminará completamente:</p>
+                    <ul>
+                        <li>📧 La invitación de la partida</li>
+                        <li>🔗 El enlace de invitación compartido</li>
+                        <li>📊 Todos los datos y estadísticas</li>
+                        <li>👥 Las conexiones con otros jugadores</li>
+                    </ul>
+                </div>
+                <p class="confirmation-text">
+                    <strong>Escribe "ELIMINAR" para confirmar:</strong>
+                </p>
+                <input type="text" id="delete-confirmation-input" placeholder="Escribe ELIMINAR" autocomplete="off">
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button id="confirm-delete" class="button danger-button" disabled>🗑️ Eliminar Partida</button>
+            <button id="cancel-delete" class="button">❌ Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.my-games {
+    max-width: 120rem;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.my-games h1 {
+    text-align: center;
+    font-size: 3.2rem;
+    color: var(--dark);
+    margin-bottom: 3rem;
+    background: linear-gradient(135deg, var(--aqua), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.section-block {
+    margin-bottom: 4rem;
+}
+
+.section-block h2 {
+    font-size: 2.4rem;
+    color: var(--dark);
+    margin-bottom: 2rem;
+    border-bottom: 3px solid var(--aqua);
+    padding-bottom: 1rem;
+}
+
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(35rem, 1fr));
+    gap: 2rem;
+}
+
+.game-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 1.2rem;
+    padding: 2rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-left: 4px solid var(--aqua);
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.game-card.expired {
+    opacity: 0.7;
+    border-left-color: #ccc;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.card-header h3 {
+    font-size: 1.8rem;
+    color: var(--dark);
+    margin: 0;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.status-pending {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    color: white;
+}
+
+.status-accepted {
+    background: linear-gradient(135deg, #4caf50, #388e3c);
+    color: white;
+}
+
+.status-expired {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    color: white;
+}
+
+.status-playing {
+    background: linear-gradient(135deg, var(--aqua), var(--purple));
+    color: white;
+}
+
+.status-finished {
+    background: linear-gradient(135deg, #607d8b, #455a64);
+    color: white;
+}
+
+.status-waiting {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    color: white;
+}
+
+.card-content {
+    margin-bottom: 1.5rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1rem 0;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.label {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.value {
+    font-weight: 500;
+    color: var(--aqua);
+}
+
+.result-victory {
+    color: #4caf50;
+}
+
+.result-defeat {
+    color: #f44336;
+}
+
+.result-draw {
+    color: #ff9800;
+}
+
+.invitation-link-section {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.link-input {
+    flex: 1;
+    padding: 0.8rem;
+    border: 2px solid #ddd;
+    border-radius: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.copy-btn {
+    min-width: 4rem;
+    padding: 0.8rem;
+}
+
+.card-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.primary-button {
+    background: linear-gradient(135deg, var(--aqua), var(--purple));
+    color: white;
+    font-weight: 600;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 1.5rem;
+    margin: 3rem 0;
+}
+
+.empty-icon {
+    font-size: 6rem;
+    margin-bottom: 2rem;
+}
+
+.empty-state h2 {
+    font-size: 2.4rem;
+    color: var(--dark);
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-size: 1.6rem;
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 3rem;
+}
+
+.error-message {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 0.8rem;
+    text-align: center;
+    margin: 2rem 0;
+}
+
+/* Estilos para eliminar partidas */
+.action-buttons-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+/* Modal de confirmación */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 1.5rem;
+    padding: 3rem;
+    max-width: 50rem;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-content h3 {
+    font-size: 2.4rem;
+    color: var(--dark);
+    margin-bottom: 1.5rem;
+}
+
+.modal-content p {
+    font-size: 1.6rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.warning-info {
+    background: rgba(244, 67, 54, 0.1);
+    border: 2px solid #f44336;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin: 2rem 0;
+    text-align: left;
+}
+
+.warning-box {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid #ffc107;
+    border-radius: 0.8rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.warning-info p {
+    margin: 0.5rem 0;
+    color: #d32f2f;
+}
+
+.warning-box p {
+    color: #f57c00;
+    font-weight: 600;
+}
+
+.confirmation-text {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #d32f2f;
+    margin: 1.5rem 0 0.5rem 0;
+}
+
+#delete-confirmation-input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 0.8rem;
+    font-size: 1.4rem;
+    text-align: center;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+#delete-confirmation-input:focus {
+    outline: none;
+    border-color: #f44336;
+    box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+}
+
+.warning-info ul {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.warning-info li {
+    margin: 0.5rem 0;
+    color: #666;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    margin-top: 2.5rem;
+}
+
+.modal-buttons .button {
+    min-width: 15rem;
+    padding: 1.2rem 2rem;
+    font-size: 1.4rem;
+}
+
+.button.disabled,
+.button:disabled {
+    background: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+    transform: none !important;
+}
+
+.button.success {
+    background: linear-gradient(135deg, #4caf50, #45a049) !important;
+    color: white !important;
+}
+
+.modal-header {
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.modal-body {
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .games-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .invitation-link-section {
+        flex-direction: column;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+</style>
+
+<script>
+// Asegurar que la función esté disponible globalmente
+window.copyLink = function(button) {
+    const input = button.previousElementSibling;
+    input.select();
+    input.setSelectionRange(0, 99999);
+    
+    try {
+        document.execCommand('copy');
+        const originalContent = button.textContent;
+        button.textContent = '✅';
+        button.style.backgroundColor = '#4CAF50';
+        
+        setTimeout(() => {
+            button.textContent = originalContent;
+            button.style.backgroundColor = '';
+        }, 2000);
+    } catch (err) {
+        alert('No se pudo copiar. Selecciona y copia manualmente.');
+    }
+};
+
+// Variables para manejar la eliminación de partidas
+let gameToDelete = null;
+
+// Asegurar que la función esté disponible globalmente
+window.deleteGame = function(gameId) {
+    gameToDelete = gameId;
+    const modal = document.getElementById('delete-game-modal');
+    const confirmationInput = document.getElementById('delete-confirmation-input');
+    const confirmButton = document.getElementById('confirm-delete');
+    
+    // Resetear estado del modal
+    confirmationInput.value = '';
+    confirmButton.disabled = true;
+    confirmButton.classList.add('disabled');
+    confirmButton.textContent = '🗑️ Eliminar Partida';
+    confirmButton.classList.remove('success');
+    
+    // Mostrar modal y enfocar input
+    modal.classList.add('show');
+    setTimeout(() => {
+        confirmationInput.focus();
+    }, 100);
+};
+
+// Manejadores del modal de eliminación
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('delete-game-modal');
+    const confirmButton = document.getElementById('confirm-delete');
+    const cancelButton = document.getElementById('cancel-delete');
+    const confirmationInput = document.getElementById('delete-confirmation-input');
+
+    // Habilitar/deshabilitar botón según el texto ingresado
+    confirmationInput.addEventListener('input', function() {
+        const inputValue = this.value.trim().toUpperCase();
+        if (inputValue === 'ELIMINAR') {
+            confirmButton.disabled = false;
+            confirmButton.classList.remove('disabled');
+        } else {
+            confirmButton.disabled = true;
+            confirmButton.classList.add('disabled');
+        }
+    });
+
+    // Confirmar eliminación
+    confirmButton.addEventListener('click', async function() {
+        if (!gameToDelete || this.disabled) return;
+
+        try {
+            // Mostrar estado de carga
+            confirmButton.textContent = '🔄 Eliminando...';
+            confirmButton.disabled = true;
+            confirmationInput.disabled = true;
+
+            const response = await fetch(`/delete-game/${gameToDelete}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Mostrar mensaje de éxito
+                confirmButton.textContent = '✅ Partida Eliminada';
+                confirmButton.classList.add('success');
+                
+                setTimeout(() => {
+                    // Cerrar modal y recargar página
+                    modal.classList.remove('show');
+                    location.reload();
+                }, 1500);
+            } else {
+                // Mostrar error
+                alert(`❌ Error: ${result.message}`);
+                resetModalState();
+            }
+        } catch (error) {
+            console.error('Error al eliminar partida:', error);
+            alert('❌ Error de conexión. Inténtalo de nuevo.');
+            resetModalState();
+        }
+    });
+
+    // Función para resetear el estado del modal
+    function resetModalState() {
+        confirmButton.textContent = '🗑️ Eliminar Partida';
+        confirmButton.disabled = true;
+        confirmButton.classList.add('disabled');
+        confirmButton.classList.remove('success');
+        confirmationInput.disabled = false;
+        confirmationInput.value = '';
+        confirmationInput.focus();
+    }
+
+    // Cancelar eliminación
+    cancelButton.addEventListener('click', function() {
+        modal.classList.remove('show');
+        gameToDelete = null;
+        resetModalState();
+    });
+
+    // Cerrar modal al hacer clic fuera
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+            gameToDelete = null;
+            resetModalState();
+        }
+    });
+
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.classList.contains('show')) {
+            modal.classList.remove('show');
+            gameToDelete = null;
+            resetModalState();
+        }
+    });
+
+    // Permitir confirmar con Enter cuando el input esté enfocado
+    confirmationInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !confirmButton.disabled) {
+            confirmButton.click();
+        }
+    });
+});
+</script>

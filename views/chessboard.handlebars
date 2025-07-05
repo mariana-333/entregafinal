@@ -1,0 +1,118 @@
+<div class="game-container-with-captures">
+  <!-- Bandeja de piezas capturadas por las blancas -->
+  <div class="captured-pieces-container">
+    <div class="captured-section white-captures">
+      <div class="captured-header">
+        <span class="captured-title">Capturas Blancas</span>
+        <span class="captured-count" id="white-captures-count">0</span>
+      </div>
+      <div class="captured-pieces" id="white-captured-pieces"></div>
+      <div class="material-advantage" id="white-material-advantage">
+        <div class="advantage-text">Ventaja Material</div>
+        <div class="advantage-value" id="white-advantage-value">+0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Área principal del juego -->
+  <div class="main-game-area">
+    <!-- Panel de controles del juego -->
+    <div class="game-sidebar" style="flex-direction: row; justify-content: center; gap: 2rem; min-width: auto;">
+      <div class="game-controls">
+        <button id="nueva-partida" class="button">🔄 Nueva Partida</button>
+        <button id="rendirse" class="button surrender-button">🏳️ Rendirse</button>
+      </div>
+      
+      <div class="turno-actual">
+        <p>Turno actual:</p>
+        <span id="turno-display">Blancas</span>
+      </div>
+      
+      <div class="sync-status">
+        <span id="sync-indicator">🔄 Sincronizado</span>
+      </div>
+      
+      <div class="game-stats">
+        <h3>{{#if gameInfo}}Partida {{gameInfo.gameId}}{{else}}Modo Práctica{{/if}}</h3>
+        {{#if gameInfo}}
+        <p><strong>Oponente:</strong> {{gameInfo.opponent}}</p>
+        <p><strong>Tu rol:</strong> {{#if gameInfo.isOwner}}Creador{{else}}Invitado{{/if}}</p>
+        <p><strong>Tu color:</strong> {{#if (eq jugadorColor 'blanca')}}♔ Blancas{{else}}♚ Negras{{/if}}</p>
+        {{/if}}
+        <p>Movimientos: <span id="contador-movimientos">0</span></p>
+        <p id="estado-juego">Partida en curso</p>
+      </div>
+    </div>
+
+    <!-- Tablero -->
+    <div class="tablero-container">
+      <div class="tablero piezas">
+        {{#each filas}}
+            {{#each this}}
+            <div class="casilla {{color}} pos-{{pos}}" data-pos="{{pos}}">
+                {{#if pieza}}
+                  <span class="pieza {{pieza.color}}" draggable="true" data-tipo="{{pieza.tipo}}" data-color="{{pieza.color}}">
+                    {{> piezas pieza=this.pieza}}
+                  </span>
+                {{/if}}
+            </div>
+            {{/each}}
+        {{/each}}
+      </div>
+    </div>
+  </div>
+
+  <!-- Bandeja de piezas capturadas por las negras -->
+  <div class="captured-pieces-container">
+    <div class="captured-section black-captures">
+      <div class="captured-header">
+        <span class="captured-title">Capturas Negras</span>
+        <span class="captured-count" id="black-captures-count">0</span>
+      </div>
+      <div class="captured-pieces" id="black-captured-pieces"></div>
+      <div class="material-advantage" id="black-material-advantage">
+        <div class="advantage-text">Ventaja Material</div>
+        <div class="advantage-value" id="black-advantage-value">+0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmación de rendición -->
+<div id="surrender-modal" class="modal">
+  <div class="modal-content">
+    <h3>¿Confirmar rendición?</h3>
+    <p>¿Estás seguro de que quieres rendirte? Esta acción no se puede deshacer.</p>
+    <div class="modal-buttons">
+      <button id="confirm-surrender" class="button danger-button">Sí, rendirse</button>
+      <button id="cancel-surrender" class="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de fin de juego -->
+<div id="game-over-modal" class="modal">
+  <div class="modal-content">
+    <h3 id="game-over-title">Fin del juego</h3>
+    <p id="game-over-message">El juego ha terminado</p>
+    <div class="modal-buttons">
+      <button id="new-game-from-modal" class="button">Nueva Partida</button>
+      <button id="close-modal" class="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Definir el color del jugador - tablero.js ya se carga desde main.handlebars -->
+<script>
+  // Debug del color del jugador
+  const jugadorColorFromServer = "{{jugadorColor}}";
+  console.log('🎨 Color recibido del servidor:', jugadorColorFromServer);
+  
+  // Establecer color del jugador con valor por defecto
+  window.jugadorColor = jugadorColorFromServer || 'blanca';
+  console.log('🎨 Color final asignado:', window.jugadorColor);
+  
+  // También establecer gameId si existe
+  window.gameId = "{{gameId}}" || null;
+  console.log('🎮 GameId:', window.gameId);
+</script>

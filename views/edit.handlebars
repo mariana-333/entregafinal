@@ -1,0 +1,49 @@
+<main>
+      <form class="formulary margin" action="/edit" method="post" enctype="multipart/form-data">
+        {{#if error}}
+        <div class="error">{{error}}</div>
+        {{/if}}
+        <fieldset>
+          <legend>Editar datos</legend>
+          <div class="fieldset">
+            <label>Nombres</label>
+            <input name="nombres" class="input-text" type="text" value="{{currentUser.nombres}}" required>
+          </div>
+          <div class="fieldset">
+            <label>Apellidos</label>
+            <input name="apellidos" class="input-text" type="text" value="{{currentUser.apellidos}}" required>
+          </div>
+          <div class="fieldset">
+            <label>Fecha de nacimiento</label>
+            <input name="fecha" class="input-text" type="date" value="{{currentUser.fechaNacimiento}}" required>
+          </div>
+          <div class="fieldset">
+            <label>Nombre de usuario</label>
+            <input name="username" class="input-text" type="text" value="{{currentUser.username}}" readonly>
+            <small>El nombre de usuario no se puede modificar</small>
+          </div>
+          <div class="fieldset">
+            <label for="profilepicture">Foto de perfil</label>
+            {{#if currentUser.profilePicture}}
+              <img src="{{currentUser.profilePicture}}" alt="Foto actual" class="profile-preview">
+            {{/if}}
+            <input name="profilepicture" type="file" id="profilepicture" accept="image/*">
+          </div>
+          <div class="fieldset">
+            <label>Correo electrónico</label>
+            <input name="email" class="input-text" type="email" value="{{currentUser.email}}" required>
+          </div>
+          <div class="fieldset">
+            <label>Nueva contraseña (dejar en blanco para mantener la actual)</label>
+            <input name="password" class="input-text" type="password">
+          </div>
+          <div class="fieldset">
+            <label>Confirmar nueva contraseña</label>
+            <input name="confirm-password" class="input-text" type="password">
+          </div>
+          <div class="submit w-100 align-right flex">
+            <button type="submit" class="button">Guardar cambios</button>
+          </div>
+        </fieldset>
+      </form>
+    </main>

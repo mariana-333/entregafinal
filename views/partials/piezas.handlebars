@@ -1,0 +1,13 @@
+{{#if (eq pieza.tipo "torre")}}
+  {{> torre }} <!-- Invoca el partial torre -->
+{{else if (eq pieza.tipo "caballo")}}
+  {{> caballo }} <!-- Invoca el partial caballo -->
+{{else if (eq pieza.tipo "alfil")}}
+  {{> alfil }} <!-- Invoca el partial alfil -->
+{{else if (eq pieza.tipo "reina")}}
+  {{> reina }} <!-- Invoca el partial reina -->
+{{else if (eq pieza.tipo "rey")}}
+  {{> rey }} <!-- Invoca el partial rey -->
+{{else if (eq pieza.tipo "peon")}}
+  {{> peon }} <!-- Invoca el partial peon -->
+{{/if}}

@@ -1,0 +1,24 @@
+<main>
+    <div class="game-container">
+        <div id="turno-display" class="turno-display">
+            Turno: Blancas
+        </div>
+        <div id="contador-movimientos" class="contador">
+            Movimientos: 0
+        </div>
+        <button id="nueva-partida" class="button">Nueva Partida</button>
+        <div id="tablero" class="tablero">
+            {{#each filas}}
+                <div class="fila">
+                    {{#each this}}
+                        <div class="casilla {{this.color}}" data-pos="{{this.pos}}">
+                            {{#if this.pieza}}
+                                <div class="pieza {{this.pieza.color}}" data-tipo="{{this.pieza.tipo}}"></div>
+                            {{/if}}
+                        </div>
+                    {{/each}}
+                </div>
+            {{/each}}
+        </div>
+    </div>
+</main>

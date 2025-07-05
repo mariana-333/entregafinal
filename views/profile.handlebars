@@ -1,0 +1,67 @@
+<main>
+    <section class="profile-container">
+        <h1><i class="fas fa-chess-king"></i> Perfil</h1>
+        
+        <div class="profile-info">
+            {{#if currentUser.profilePicture}}
+                <img src="{{currentUser.profilePicture}}" alt="Avatar del Usuario">
+            {{else}}
+                <img src="/img/user_avatar.png" alt="Avatar por defecto">
+            {{/if}}
+            
+            <div class="user-details">
+                <h2>{{currentUser.username}}</h2>
+                
+                <div class="user-data">
+                    <p><i class="fas fa-user"></i> {{currentUser.nombres}} {{currentUser.apellidos}}</p>
+                    <p><i class="fas fa-envelope"></i> {{currentUser.email}}</p>
+                </div>
+                
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <span class="stat-label"><i class="fas fa-trophy"></i> Victorias</span>
+                        <span class="stat-value wins">{{currentUser.stats.wins}}</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label"><i class="fas fa-handshake"></i> Empates</span>
+                        <span class="stat-value draws">{{currentUser.stats.draws}}</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label"><i class="fas fa-times-circle"></i> Derrotas</span>
+                        <span class="stat-value losses">{{currentUser.stats.losses}}</span>
+                    </div>
+                </div>
+                
+                <a href="/edit" class="button">
+                    <i class="fas fa-edit"></i> Editar Perfil
+                </a>
+            </div>
+        </div>
+        
+        <h2><i class="fas fa-history"></i> Historial</h2>
+        
+        <div class="history-list">
+            {{#each gameHistory}}
+                <div class="history-item">
+
+                    <div class="history-details">
+                        <p class="opponent"><strong>vs. {{this.opponent}}</strong> - {{this.result}}</p>
+                        <p class="game-date">{{this.date}} - #{{this.gameId}}</p>
+                    </div>
+                    
+                    <a href="/game/{{this.gameId}}" class="view-game">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </div>
+            {{else}}
+                <div class="empty-history">
+                    <i class="fas fa-chess"></i>
+                    <p>No hay partidas jugadas aún</p>
+                    <a href="/play" class="button">¡Juega ahora!</a>
+                </div>
+            {{/each}}
+        </div>
+    </section>
+</main>
