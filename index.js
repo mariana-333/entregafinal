@@ -663,7 +663,7 @@ app.get('/play', (req, res) => {
 app.get('/chessboard', async (req, res) => {
     try {
         const gameId = req.query.game;
-        const userId = req.session.user?.id;
+        const userId = req.session.user.id;
         let tableroData = generarTablero(); // Tablero por defecto
         let gameInfo = null;
         let jugadorColor = 'blanca'; // Por defecto
