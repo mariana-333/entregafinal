@@ -312,9 +312,8 @@ app.post('/api/rendirse', validateApiAccess, async (req, res) => {
 });
 
 app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
-    console.log('Datos recibidos en /api/validar-movimiento:', req.body);
-    // Log detallado de cada campo
-    console.log('pieza:', req.body.pieza, '| color:', req.body.color, '| inicial:', req.body.inicial, '| final:', req.body.final, '| gameId:', req.body.gameId);
+    console.log('Datos recibidos:', req.body);
+    
     const { pieza, color, inicial, final, gameId } = req.body;
 
 
@@ -381,8 +380,8 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
         final: [xFinal, yFinal]
     });
 
-
     let movimientosValidos = [];
+
     try {
         switch (pieza) {
             case 'caballo':
@@ -413,17 +412,7 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
         console.log('Movimientos válidos:', movimientosValidos);
         console.log('Posición destino:', final);
 
-        // Asegurarse de que la comparación sea por string (por si movimientosValidos es array de strings)
-        let esValido = false;
-        if (Array.isArray(movimientosValidos) && movimientosValidos.length > 0) {
-            // Si los movimientos válidos son tipo 'e4', comparar como string
-            if (typeof movimientosValidos[0] === 'string') {
-                esValido = movimientosValidos.includes(final);
-            } else if (Array.isArray(movimientosValidos[0]) && movimientosValidos[0].length === 2) {
-                // Si son arrays de coordenadas, convertir final a coordenada y comparar
-                esValido = movimientosValidos.some(([x, y]) => x === xFinal && y === yFinal);
-            }
-        }
+        const esValido = movimientosValidos.includes(final);
 
         // --- DETECCIÓN DE CAPTURA DE REY ---
         let reyCapturado = false;
@@ -547,7 +536,7 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
             movimiento: esValido ? ultimoMovimiento : null,
             contadorMovimientos: contadorMovimientos,
             finPartida: reyCapturado,
-            ganador: reyCapturado ? color : null
+            ganador: reyCapturado ? colorJugador : null
         });
     } catch (error) {
         console.error('Error en validación:', error);
