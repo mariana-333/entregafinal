@@ -157,10 +157,8 @@ function convertirTableroDeDB(boardState) {
     if (!boardState) {
         return generarTablero(); // Si no hay estado, usar tablero inicial
     }
-    
     const files = [8, 7, 6, 5, 4, 3, 2, 1];
     const cols = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    
     const tablero = [];
     for (let i = 0; i < 8; i++) {
         const fila = [];
@@ -318,15 +316,26 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
     
     const { pieza, color, inicial, final, gameId } = req.body;
 
+
+    // Validar datos y gameId
     if (!pieza || !color || !inicial || !final) {
         return res.status(400).json({ 
             valido: false, 
             mensaje: 'Datos incompletos' 
         });
     }
+    // Si es partida online, el gameId es obligatorio
+    if (req.body.hasOwnProperty('gameId') && !gameId) {
+        return res.status(400).json({
+            valido: false,
+            mensaje: 'Falta gameId para partida online'
+        });
+    }
+
 
     let game = null;
     let turnoActualPartida = turnoActual; // Usar turno global por defecto
+    let boardStateFromDB = null;
 
     // Si hay gameId, cargar el estado del juego desde la base de datos
     if (gameId) {
@@ -334,7 +343,14 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
             game = await Game.findOne({ gameId });
             if (game) {
                 turnoActualPartida = game.currentTurn;
-                console.log(`🎮 Cargando turno desde BD para juego ${gameId}: ${turnoActualPartida}`);
+                if (game.boardState) {
+                    boardStateFromDB = game.boardState;
+                }
+                // Sincronizar el tablero en memoria con el de la BD
+                if (boardStateFromDB) {
+                    estadoTablero = convertirTableroDeDB(boardStateFromDB);
+                }
+                console.log(`🎮 Cargando turno y tablero desde BD para juego ${gameId}: ${turnoActualPartida}`);
             } else {
                 console.log(`⚠️ Juego ${gameId} no encontrado, usando turno global`);
             }
@@ -343,6 +359,7 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
         }
     }
 
+    // El repo original compara el color tal cual, no lo normaliza
     if (color !== turnoActualPartida) {
         return res.json({ 
             valido: false, 
@@ -397,20 +414,35 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
 
         const esValido = movimientosValidos.includes(final);
 
+        // --- DETECCIÓN DE CAPTURA DE REY ---
+        let reyCapturado = false;
+        let colorReyCapturado = null;
         if (esValido) {
-            // Actualizar turno
+            // Buscar la pieza en la casilla destino antes de mover
+            let piezaDestino = null;
+            if (estadoTablero) {
+                const xFinalTab = xFinal;
+                const yFinalTab = yFinal;
+                if (estadoTablero[yFinalTab] && estadoTablero[yFinalTab][xFinalTab]) {
+                    piezaDestino = estadoTablero[yFinalTab][xFinalTab].pieza;
+                }
+            }
+            if (piezaDestino && piezaDestino.tipo === 'rey') {
+                reyCapturado = true;
+                colorReyCapturado = piezaDestino.color;
+            }
+        }
+
+
+        if (esValido) {
+            // Alternar turno
             const nuevoTurno = turnoActualPartida === 'blanca' ? 'negra' : 'blanca';
-            
-            // Actualizar estado global
-            turnoActual = nuevoTurno;
-            contadorMovimientos++;
-            
-            // Si hay gameId, actualizar la base de datos
+
             if (gameId && game) {
                 try {
                     // Actualizar el estado del tablero en memoria
                     actualizarEstadoTablero(inicial, final, pieza, color);
-                    
+
                     // Convertir el tablero a formato de BD
                     const boardStateForDB = {};
                     for (let i = 0; i < estadoTablero.length; i++) {
@@ -421,51 +453,96 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
                             }
                         }
                     }
-                    
-                    // Guardar en base de datos
+
+                    // Siempre actualizar currentTurn, excepto si se capturó el rey (fin de partida)
+                    let updateFields = {
+                        boardState: boardStateForDB,
+                        currentTurn: reyCapturado ? undefined : nuevoTurno
+                    };
+                    if (reyCapturado) {
+                        updateFields.status = 'finished';
+                        updateFields.result = color === 'blanca' ? 'victory' : 'defeat';
+                        updateFields.winner = color;
+                        updateFields.finishedAt = new Date();
+                        delete updateFields.currentTurn; // No hay turno si terminó la partida
+                    }
+
                     await Game.updateOne(
                         { gameId },
-                        { 
-                            currentTurn: nuevoTurno,
-                            boardState: boardStateForDB
-                        }
+                        updateFields
                     );
-                    
-                    console.log(`✅ Estado guardado en BD para juego ${gameId}: turno=${nuevoTurno}`);
+                    if (reyCapturado) {
+                        estadoJuego = `${color}-ganan`;
+                    }
+                    console.log(`✅ Estado guardado en BD para juego ${gameId}: turno=${reyCapturado ? 'fin' : nuevoTurno}`);
                 } catch (error) {
                     console.error('❌ Error guardando estado en BD:', error);
                 }
+            } else {
+                // Solo modo práctica/local
+                actualizarEstadoTablero(inicial, final, pieza, color);
+                if (reyCapturado) {
+                    estadoJuego = `${color}-ganan`;
+                } else {
+                    turnoActual = nuevoTurno;
+                }
             }
-            
+            contadorMovimientos++;
+
             // Almacenar el último movimiento para sincronización
             ultimoMovimiento = {
                 id: contadorMovimientos,
                 pieza,
-                color,
+                color: color,
                 inicial,
                 final,
-                timestamp: new Date().getTime()
+                timestamp: new Date().getTime(),
+                reyCapturado: reyCapturado ? colorReyCapturado : null
             };
-            
-            // Agregar al historial
             historialMovimientos.push(ultimoMovimiento);
-            
-            console.log('Nuevo turno:', nuevoTurno);
+            console.log('Nuevo turno:', reyCapturado ? 'fin' : nuevoTurno);
             console.log('Último movimiento:', ultimoMovimiento);
         }
 
-        res.json({ 
-            valido: esValido, 
-            mensaje: esValido ? 'Movimiento válido' : 'Movimiento inválido',
-            nuevoTurno: turnoActual,
+        // Determinar el nuevo turno correctamente para la respuesta
+        // Si la partida terminó, no hay nuevo turno
+        let nuevoTurnoRespuesta = null;
+        if (reyCapturado) {
+            nuevoTurnoRespuesta = null;
+        } else if (gameId && game) {
+            // Leer el turno actualizado desde la base de datos para evitar desincronización
+            try {
+                const updatedGame = await Game.findOne({ gameId });
+                if (updatedGame && typeof updatedGame.currentTurn === 'string') {
+                    nuevoTurnoRespuesta = updatedGame.currentTurn;
+                    turnoActual = updatedGame.currentTurn;
+                } else {
+                    nuevoTurnoRespuesta = turnoActualPartida === 'blanca' ? 'negra' : 'blanca';
+                    turnoActual = nuevoTurnoRespuesta;
+                }
+            } catch (e) {
+                nuevoTurnoRespuesta = turnoActualPartida === 'blanca' ? 'negra' : 'blanca';
+                turnoActual = nuevoTurnoRespuesta;
+            }
+        } else {
+            // Partida local
+            nuevoTurnoRespuesta = turnoActual;
+        }
+
+        res.json({
+            valido: esValido,
+            mensaje: esValido ? (reyCapturado ? '¡Rey capturado! Fin de la partida.' : 'Movimiento válido') : 'Movimiento inválido',
+            nuevoTurno: nuevoTurnoRespuesta,
             movimiento: esValido ? ultimoMovimiento : null,
-            contadorMovimientos: contadorMovimientos
+            contadorMovimientos: contadorMovimientos,
+            finPartida: reyCapturado,
+            ganador: reyCapturado ? colorJugador : null
         });
     } catch (error) {
         console.error('Error en validación:', error);
-        res.status(500).json({ 
-            valido: false, 
-            mensaje: 'Error interno del servidor' 
+        res.status(500).json({
+            valido: false,
+            mensaje: 'Error interno del servidor'
         });
     }
 });
@@ -663,7 +740,7 @@ app.get('/play', (req, res) => {
 app.get('/chessboard', async (req, res) => {
     try {
         const gameId = req.query.game;
-        const userId = req.session.user.id;
+        const userId = req.session.user?.id;
         let tableroData = generarTablero(); // Tablero por defecto
         let gameInfo = null;
         let jugadorColor = 'blanca'; // Por defecto
