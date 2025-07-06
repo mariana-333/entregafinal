@@ -644,14 +644,15 @@ app.post('/register', upload.single('profilepicture'), async (req, res) => {
             });
         }
 
-        // Crear el nuevo usuario
+        // Hashear la contraseña antes de guardar
+        const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({
             nombres,
             apellidos,
             fechaNacimiento: fecha,
             username,
             email,
-            password,
+            password: hashedPassword,
             profilePicture: req.file ? `/uploads/${req.file.filename}` : null
         });
 
