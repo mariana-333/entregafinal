@@ -1260,7 +1260,7 @@ app.post('/edit', requireLogin, upload.single('profilepicture'), async (req, res
     }
 });
 
-app.post('/game/finish', requireLogin, async (req, res) => {
+app.post('/api/game/finish', requireLogin, async (req, res) => {
     try {
         const { ganador, estadoJuego } = req.body;
         const userId = req.session.user.id;
