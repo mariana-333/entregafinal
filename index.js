@@ -318,14 +318,21 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
 
 
     // Validar datos y gameId
-    if (!pieza || !color || !inicial || !final) {
+    const camposFaltantes = [];
+    if (!pieza) camposFaltantes.push('pieza');
+    if (!color) camposFaltantes.push('color');
+    if (!inicial) camposFaltantes.push('inicial');
+    if (!final) camposFaltantes.push('final');
+    if (camposFaltantes.length > 0) {
+        console.error('❌ Datos incompletos en /api/validar-movimiento:', req.body, 'Faltan:', camposFaltantes);
         return res.status(400).json({ 
             valido: false, 
-            mensaje: 'Datos incompletos' 
+            mensaje: `Datos incompletos. Faltan: ${camposFaltantes.join(', ')}`
         });
     }
     // Si es partida online, el gameId es obligatorio
     if (req.body.hasOwnProperty('gameId') && !gameId) {
+        console.error('❌ Falta gameId para partida online en /api/validar-movimiento:', req.body);
         return res.status(400).json({
             valido: false,
             mensaje: 'Falta gameId para partida online'
@@ -455,18 +462,25 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
                     }
 
                     // Siempre actualizar currentTurn, excepto si se capturó el rey (fin de partida)
+                    // Calcular el nuevo turno ANTES de guardar
+                    let turnoParaGuardar = null;
+                    if (reyCapturado) {
+                        turnoParaGuardar = undefined;
+                    } else {
+                        turnoParaGuardar = (color === 'blanca') ? 'negra' : 'blanca';
+                    }
+
                     let updateFields = {
                         boardState: boardStateForDB,
-                        currentTurn: reyCapturado ? undefined : nuevoTurno
+                        currentTurn: turnoParaGuardar
                     };
                     if (reyCapturado) {
                         updateFields.status = 'finished';
-                        updateFields.result = color === 'blanca' ? 'victory' : 'defeat';
-                        updateFields.winner = color;
+                        updateFields.result = 'victory';
+                        updateFields.winner = color; // El color que captura el rey es el ganador
                         updateFields.finishedAt = new Date();
                         delete updateFields.currentTurn; // No hay turno si terminó la partida
                     }
-
 
                     await Game.updateOne(
                         { gameId },
@@ -475,7 +489,7 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
                     if (reyCapturado) {
                         estadoJuego = `${color}-ganan`;
                     }
-                    console.log(`✅ Estado guardado en BD para juego ${gameId}: turno=${reyCapturado ? 'fin' : nuevoTurno}`);
+                    console.log(`✅ Estado guardado en BD para juego ${gameId}: turno=${reyCapturado ? 'fin' : turnoParaGuardar}`);
                 } catch (error) {
                     console.error('❌ Error guardando estado en BD:', error);
                 }
@@ -544,6 +558,29 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
         res.status(500).json({
             valido: false,
             mensaje: 'Error interno del servidor'
+        });
+    }
+});
+
+// Endpoint para sincronización de movimientos en tiempo real
+app.get('/api/ultimo-movimiento/:contadorCliente', validateApiAccess, (req, res) => {
+    const contadorCliente = parseInt(req.params.contadorCliente) || 0;
+    
+    // Si el cliente tiene un contador menor al servidor, hay movimientos nuevos
+    if (contadorCliente < contadorMovimientos && ultimoMovimiento) {
+        res.json({
+            hayNuevoMovimiento: true,
+            movimiento: ultimoMovimiento,
+            turnoActual: turnoActual,
+            contadorMovimientos: contadorMovimientos,
+            estadoJuego: estadoJuego
+        });
+    } else {
+        res.json({
+            hayNuevoMovimiento: false,
+            turnoActual: turnoActual,
+            contadorMovimientos: contadorMovimientos,
+            estadoJuego: estadoJuego
         });
     }
 });
@@ -1209,7 +1246,8 @@ app.post('/edit', requireLogin, upload.single('profilepicture'), async (req, res
                     currentUser: currentUser
                 });
             }
-            updateData.password = password;
+            // Hashear la nueva contraseña antes de guardar
+            updateData.password = await bcrypt.hash(password, 10);
         }
 
         // Actualizar usuario
