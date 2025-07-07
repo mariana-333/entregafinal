@@ -670,8 +670,9 @@ class TableroAjedrez {
             return;
         }
 
-        // Normalizar color a lo que espera el backend ('blanca' o 'negra')
-        let color = colorPieza;
+
+        // Usar SIEMPRE el color del jugador para el movimiento
+        let color = this.jugadorColor;
         if (color === 'blancas') color = 'blanca';
         if (color === 'negras') color = 'negra';
 
@@ -1214,3 +1215,4 @@ document.addEventListener("DOMContentLoaded", function () {
     window.tablero = new TableroAjedrez();
     console.log('✅ Instancia creada y asignada a window.tablero');
 });
+
