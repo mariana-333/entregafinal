@@ -470,6 +470,9 @@ class TableroAjedrez {
         
         console.log(`Turno actualizado: ${turno}, Es mi turno: ${esMiTurno}`);
         this.actualizarBloqueoTablero();
+
+        // Reconfigurar drag and drop tras cada cambio de turno
+        this.configurarDragAndDrop();
     }
 
     mostrarNotificacionTurno(mensaje, tipo = 'info') {
@@ -574,57 +577,60 @@ class TableroAjedrez {
         console.log('🎮 Turno actual:', this.turnoActual);
         console.log('🎯 Estado del juego:', this.estadoJuego);
         
-        // Cuando empieza a arrastrar una pieza
+        // Eliminar listeners previos clonando nodos
+        document.querySelectorAll('.pieza').forEach(pieza => {
+            const nuevaPieza = pieza.cloneNode(true);
+            pieza.parentNode.replaceChild(nuevaPieza, pieza);
+        });
+        document.querySelectorAll('.casilla').forEach(casilla => {
+            const nuevaCasilla = casilla.cloneNode(true);
+            casilla.parentNode.replaceChild(nuevaCasilla, casilla);
+        });
+
+        // Reagregar listeners a piezas
         document.querySelectorAll(".pieza").forEach(pieza => {
             pieza.addEventListener("dragstart", (e) => {
                 const colorPieza = pieza.getAttribute('data-color');
-                
                 console.log('🖱️ Intentando arrastrar pieza:');
                 console.log('  - Color pieza:', colorPieza);
                 console.log('  - Mi color:', this.jugadorColor);
                 console.log('  - Turno actual:', this.turnoActual);
                 console.log('  - Estado juego:', this.estadoJuego);
                 console.log('  - Puede mover:', this.estadoJuego === 'en-curso' && this.turnoActual === this.jugadorColor && colorPieza === this.jugadorColor);
-                
                 if (this.estadoJuego !== 'en-curso') {
                     console.log('❌ Juego no está en curso');
                     e.preventDefault();
                     this.piezaArrastrada = null;
                     return false;
                 }
-                
                 if (this.turnoActual !== this.jugadorColor) {
                     console.log('❌ No es mi turno. Mi color:', this.jugadorColor, 'Turno actual:', this.turnoActual);
                     e.preventDefault();
                     this.piezaArrastrada = null;
                     return false;
                 }
-                
                 if (colorPieza !== this.jugadorColor) {
                     console.log('❌ Intentando mover pieza del color incorrecto. Pieza:', colorPieza, 'Mi color:', this.jugadorColor);
                     e.preventDefault();
                     this.piezaArrastrada = null;
                     return false;
                 }
-                
                 console.log('✅ Pieza válida para arrastrar');
                 this.piezaArrastrada = pieza;
                 const casillaPadre = pieza.parentElement;
                 this.posicionInicial = casillaPadre.getAttribute('data-pos');
                 setTimeout(() => pieza.style.display = "none", 0);
             });
-
             pieza.addEventListener("dragend", (e) => {
                 pieza.style.display = "";
             });
         });
 
-        // Habilita cada casilla como zona de "soltar"
+        // Reagregar listeners a casillas
         document.querySelectorAll(".casilla").forEach(casilla => {
             casilla.addEventListener("dragover", (e) => {
                 e.preventDefault();
             });
-
             casilla.addEventListener("drop", (e) => {
                 e.preventDefault();
                 if (this.piezaArrastrada) {
@@ -640,34 +646,54 @@ class TableroAjedrez {
     async manejarMovimiento(casilla) {
         // Verificar que el juego esté en curso
         if (this.estadoJuego !== 'en-curso') {
-            console.log('El juego ha terminado');
+            this.piezaArrastrada = null;
+            return;
+        }
+
+        // Verificar que sea el turno del jugador antes de permitir mover
+        if (this.turnoActual !== this.jugadorColor) {
+            alert('No es tu turno. Espera a que el oponente juegue.');
             this.piezaArrastrada = null;
             return;
         }
 
         const posicionFinal = casilla.getAttribute('data-pos');
-        const colorPieza = this.piezaArrastrada.getAttribute('data-color');
-        
-        console.log('Posición final:', posicionFinal);
-        console.log('Color de la pieza detectado:', colorPieza);
-        console.log('Turno actual:', this.turnoActual);
+        const piezaArrastrada = this.piezaArrastrada;
+        const tipoPieza = piezaArrastrada ? piezaArrastrada.getAttribute('data-tipo') : null;
+        const colorPieza = piezaArrastrada ? piezaArrastrada.getAttribute('data-color') : null;
+        const posicionInicial = this.posicionInicial;
 
-        // Verificar si hay una pieza en la casilla de destino (captura)
-        const piezaCapturada = casilla.querySelector('.pieza');
+        // Validación estricta de datos
+        if (!piezaArrastrada || !tipoPieza || !colorPieza || !posicionInicial || !posicionFinal) {
+            alert('Error interno: datos de movimiento incompletos. Intenta recargar la página.');
+            this.piezaArrastrada = null;
+            return;
+        }
 
+        // Normalizar color a lo que espera el backend ('blanca' o 'negra')
+        let color = colorPieza;
+        if (color === 'blancas') color = 'blanca';
+        if (color === 'negras') color = 'negra';
+
+        // Normalizar tipo de pieza si es necesario
+        let pieza = tipoPieza;
+        if (pieza === 'pawn') pieza = 'peon';
+        if (pieza === 'knight') pieza = 'caballo';
+        if (pieza === 'bishop') pieza = 'alfil';
+        if (pieza === 'rook') pieza = 'torre';
+        if (pieza === 'queen') pieza = 'reina';
+        if (pieza === 'king') pieza = 'rey';
+
+        // Solo incluir gameId si existe y es válido
         const movimientoData = {
-            pieza: this.piezaArrastrada.dataset.tipo,
-            color: colorPieza,
-            inicial: this.posicionInicial,
-            final: posicionFinal,
-            gameId: window.gameId || null
+            pieza,
+            color,
+            inicial: posicionInicial,
+            final: posicionFinal
         };
-        
-        console.log('🚀 Enviando datos al servidor:');
-        console.log('  - Pieza:', movimientoData.pieza);
-        console.log('  - Color:', movimientoData.color);
-        console.log('  - Inicial:', movimientoData.inicial);
-        console.log('  - Final:', movimientoData.final);
+        if (window.gameId) {
+            movimientoData.gameId = window.gameId;
+        }
 
         try {
             const response = await fetch('/api/validar-movimiento', {
@@ -679,14 +705,9 @@ class TableroAjedrez {
 
             const data = await this.validarRespuestaAPI(response, 'validación de movimiento');
 
-            console.log('📥 Respuesta del servidor:');
-            console.log('  - Válido:', data.valido);
-            console.log('  - Mensaje:', data.mensaje);
-            console.log('  - Nuevo turno:', data.nuevoTurno);
-            console.log('  - Datos completos:', data);
-
             if (data.valido) {
                 // Si hay una pieza capturada, agregarla a la bandeja
+                const piezaCapturada = casilla.querySelector('.pieza');
                 if (piezaCapturada) {
                     this.capturarPieza(piezaCapturada);
                 }
@@ -710,18 +731,13 @@ class TableroAjedrez {
                 }
 
                 this.actualizarContador();
-                console.log('✅ Movimiento local aplicado');
             } else {
-                console.log('Movimiento inválido:', data.mensaje);
                 // Si el movimiento es inválido por turno, sincronizar con el servidor
-                if (data.mensaje.includes('No es tu turno')) {
+                if (data.mensaje && data.mensaje.includes('No es tu turno')) {
                     await this.sincronizarTurno();
                 }
             }
         } catch (error) {
-            if (error.message.includes('401')) {
-                console.warn('Sesión expirada durante movimiento.');
-            }
             this.manejarErrorAPI(error, 'validación de movimiento');
         } finally {
             this.piezaArrastrada = null;
@@ -1198,4 +1214,3 @@ document.addEventListener("DOMContentLoaded", function () {
     window.tablero = new TableroAjedrez();
     console.log('✅ Instancia creada y asignada a window.tablero');
 });
-
