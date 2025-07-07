@@ -461,11 +461,12 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
                     };
                     if (reyCapturado) {
                         updateFields.status = 'finished';
-                        updateFields.result = 'victory';
-                        updateFields.winner = color; // El color que captura el rey es el ganador
+                        updateFields.result = color === 'blanca' ? 'victory' : 'defeat';
+                        updateFields.winner = color;
                         updateFields.finishedAt = new Date();
                         delete updateFields.currentTurn; // No hay turno si terminó la partida
                     }
+
 
                     await Game.updateOne(
                         { gameId },
