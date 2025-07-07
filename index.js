@@ -488,14 +488,17 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
                         delete updateFields.currentTurn; // No hay turno si terminó la partida
                     }
 
-                    await Game.updateOne(
+                    // Usar findOneAndUpdate para obtener el documento actualizado inmediatamente
+                    const updatedGameDebug = await Game.findOneAndUpdate(
                         { gameId },
-                        updateFields
+                        updateFields,
+                        { new: true }
                     );
+                    console.log(`✅ Estado guardado en BD para juego ${gameId}: turno=${reyCapturado ? 'fin' : updatedGameDebug?.currentTurn}`);
+                    console.log('🔎 currentTurn en BD tras update:', updatedGameDebug?.currentTurn);
                     if (reyCapturado) {
                         estadoJuego = `${color}-ganan`;
                     }
-                    console.log(`✅ Estado guardado en BD para juego ${gameId}: turno=${reyCapturado ? 'fin' : turnoParaGuardar}`);
                 } catch (error) {
                     console.error('❌ Error guardando estado en BD:', error);
                 }
@@ -571,35 +574,69 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
 // Endpoint para sincronización de movimientos en tiempo real
 app.get('/api/ultimo-movimiento/:contadorCliente', validateApiAccess, (req, res) => {
     const contadorCliente = parseInt(req.params.contadorCliente) || 0;
-    
-    // Si el cliente tiene un contador menor al servidor, hay movimientos nuevos
-    if (contadorCliente < contadorMovimientos && ultimoMovimiento) {
-        res.json({
-            hayNuevoMovimiento: true,
-            movimiento: ultimoMovimiento,
-            turnoActual: turnoActual,
-            contadorMovimientos: contadorMovimientos,
-            estadoJuego: estadoJuego
+    // Función auxiliar para responder con el turno correcto
+    const responder = (turno) => {
+        if (contadorCliente < contadorMovimientos && ultimoMovimiento) {
+            res.json({
+                hayNuevoMovimiento: true,
+                movimiento: ultimoMovimiento,
+                turnoActual: turno,
+                contadorMovimientos: contadorMovimientos,
+                estadoJuego: estadoJuego
+            });
+        } else {
+            res.json({
+                hayNuevoMovimiento: false,
+                turnoActual: turno,
+                contadorMovimientos: contadorMovimientos,
+                estadoJuego: estadoJuego
+            });
+        }
+    };
+    // Si el último movimiento tiene gameId, leer el turno desde la BD
+    if (ultimoMovimiento && ultimoMovimiento.gameId) {
+        Game.findOne({ gameId: ultimoMovimiento.gameId }).then(game => {
+            if (game && game.currentTurn) {
+                responder(game.currentTurn);
+            } else {
+                responder(turnoActual);
+            }
+        }).catch(() => responder(turnoActual));
+    } else {
+        responder(turnoActual);
+    }
+});
+
+// Endpoint alternativo sin parámetros para inicialización
+app.get('/api/ultimo-movimiento', validateApiAccess, (req, res) => {
+    // Si el último movimiento tiene gameId, leer el turno desde la BD
+    if (ultimoMovimiento && ultimoMovimiento.gameId) {
+        Game.findOne({ gameId: ultimoMovimiento.gameId }).then(game => {
+            res.json({
+                hayNuevoMovimiento: false,
+                turnoActual: game && game.currentTurn ? game.currentTurn : turnoActual,
+                contadorMovimientos: contadorMovimientos,
+                estadoJuego: estadoJuego,
+                ultimoMovimiento: ultimoMovimiento
+            });
+        }).catch(() => {
+            res.json({
+                hayNuevoMovimiento: false,
+                turnoActual: turnoActual,
+                contadorMovimientos: contadorMovimientos,
+                estadoJuego: estadoJuego,
+                ultimoMovimiento: ultimoMovimiento
+            });
         });
     } else {
         res.json({
             hayNuevoMovimiento: false,
             turnoActual: turnoActual,
             contadorMovimientos: contadorMovimientos,
-            estadoJuego: estadoJuego
+            estadoJuego: estadoJuego,
+            ultimoMovimiento: ultimoMovimiento
         });
     }
-});
-
-// Endpoint alternativo sin parámetros para inicialización
-app.get('/api/ultimo-movimiento', validateApiAccess, (req, res) => {
-    res.json({
-        hayNuevoMovimiento: false,
-        turnoActual: turnoActual,
-        contadorMovimientos: contadorMovimientos,
-        estadoJuego: estadoJuego,
-        ultimoMovimiento: ultimoMovimiento
-    });
 });
 
 app.post('/api/nueva-partida', validateApiAccess, (req, res) => {
