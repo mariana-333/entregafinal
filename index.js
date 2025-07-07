@@ -366,8 +366,14 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
         }
     }
 
-    // El repo original compara el color tal cual, no lo normaliza
-    if (color !== turnoActualPartida) {
+    // Normalización de color para evitar problemas de "negra" vs "negras" o mayúsculas
+    const normalizarColor = (c) => {
+        if (!c) return '';
+        return c.trim().toLowerCase().replace(/s$/, '');
+    };
+    const colorNormalizado = normalizarColor(color);
+    const turnoNormalizado = normalizarColor(turnoActualPartida);
+    if (colorNormalizado !== turnoNormalizado) {
         return res.json({ 
             valido: false, 
             mensaje: `No es tu turno. Turno actual: ${turnoActualPartida}` 
@@ -1375,4 +1381,5 @@ app.listen(port, '0.0.0.0', () => {
             });
         }
     }, 100);
+});
 });
