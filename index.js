@@ -467,6 +467,7 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
                         delete updateFields.currentTurn; // No hay turno si terminó la partida
                     }
 
+
                     await Game.updateOne(
                         { gameId },
                         updateFields
