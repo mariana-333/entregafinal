@@ -536,36 +536,13 @@ app.post('/api/validar-movimiento', validateApiAccess, async (req, res) => {
             movimiento: esValido ? ultimoMovimiento : null,
             contadorMovimientos: contadorMovimientos,
             finPartida: reyCapturado,
-            ganador: reyCapturado ? colorJugador : null
+            ganador: reyCapturado ? color : null
         });
     } catch (error) {
         console.error('Error en validación:', error);
         res.status(500).json({
             valido: false,
             mensaje: 'Error interno del servidor'
-        });
-    }
-});
-
-// Endpoint para sincronización de movimientos en tiempo real
-app.get('/api/ultimo-movimiento/:contadorCliente', validateApiAccess, (req, res) => {
-    const contadorCliente = parseInt(req.params.contadorCliente) || 0;
-    
-    // Si el cliente tiene un contador menor al servidor, hay movimientos nuevos
-    if (contadorCliente < contadorMovimientos && ultimoMovimiento) {
-        res.json({
-            hayNuevoMovimiento: true,
-            movimiento: ultimoMovimiento,
-            turnoActual: turnoActual,
-            contadorMovimientos: contadorMovimientos,
-            estadoJuego: estadoJuego
-        });
-    } else {
-        res.json({
-            hayNuevoMovimiento: false,
-            turnoActual: turnoActual,
-            contadorMovimientos: contadorMovimientos,
-            estadoJuego: estadoJuego
         });
     }
 });
