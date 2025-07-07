@@ -1215,4 +1215,3 @@ document.addEventListener("DOMContentLoaded", function () {
     window.tablero = new TableroAjedrez();
     console.log('✅ Instancia creada y asignada a window.tablero');
 });
-
